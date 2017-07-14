@@ -1,0 +1,3 @@
+gom 'github.com/aws/aws-sdk-go', :tag => 'v1.10.10'
+gom 'github.com/satori/go.uuid'
+gom 'github.com/vincent-petithory/dataurl'
