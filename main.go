@@ -9,108 +9,17 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	uuid "github.com/satori/go.uuid"
 	"github.com/vincent-petithory/dataurl"
 )
 
 // Uploader uploader
 type Uploader interface {
-	Upload(io.Reader, []string) (string, error)
+	Upload(io.ReadSeeker, []string) (string, error)
 	BasePath() string
-}
-
-// NewS3Client new s3 client
-func NewS3Client(bkt string) (*S3Client, error) {
-	sess := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String(endpoints.ApNortheast1RegionID),
-	}))
-	uploader := s3manager.NewUploader(sess)
-	return &S3Client{
-		Bucket:   bkt,
-		BaseKey:  "dev/image",
-		sess:     sess,
-		uploader: uploader,
-	}, nil
-}
-
-// S3Client s3 client
-// https://docs.aws.amazon.com/sdk-for-go/api/service/s3/
-type S3Client struct {
-	Bucket   string
-	BaseKey  string
-	sess     *session.Session
-	uploader *s3manager.Uploader
-}
-
-// Upload upload file
-func (c *S3Client) Upload(in io.Reader, p []string) (string, error) {
-	pt := append([]string{c.BaseKey}, p...)
-	fpth := fmt.Sprintf("%s", path.Join(pt...))
-	result, err := c.uploader.Upload(&s3manager.UploadInput{
-		Bucket: &c.Bucket,
-		Key:    &fpth,
-		Body:   in,
-	})
-	if err != nil {
-		return "", err
-	}
-	return result.Location, nil
-}
-
-// BasePath base path
-func (c *S3Client) BasePath() string {
-	return "basepath"
-}
-
-// NewFSClient new file system client
-func NewFSClient() (*FSClient, error) {
-	ex, err := os.Executable()
-	if err != nil {
-		return nil, err
-	}
-	imgPath := path.Join(path.Dir(ex), "image")
-	return &FSClient{
-		BaseDir:  imgPath,
-		Endpoint: "http://localhost:8080/static",
-	}, nil
-}
-
-// FSClient file system client
-type FSClient struct {
-	BaseDir  string
-	Endpoint string
-}
-
-// Upload upload file
-func (c *FSClient) Upload(in io.Reader, p []string) (string, error) {
-	pt := append([]string{c.BaseDir}, p...)
-	fpth := fmt.Sprintf("%s", path.Join(pt...))
-	url := append([]string{c.Endpoint}, p...)
-	furl := fmt.Sprintf("%s", path.Join(url...))
-	log.Printf("%s", fpth)
-
-	f, err := os.Create(fpth)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-	if _, err := io.Copy(f, in); err != nil {
-		return "", err
-	}
-	return furl, nil
-}
-
-// BasePath base path
-func (c *FSClient) BasePath() string {
-	return c.BaseDir
 }
 
 // App app
