@@ -8,6 +8,13 @@ import (
 	"path"
 )
 
+// FSClient file system client
+type FSClient struct {
+	BaseDir  string
+	Endpoint string
+	Logger   *log.Logger
+}
+
 // NewFSClient new file system client
 func NewFSClient() (*FSClient, error) {
 	ex, err := os.Executable()
@@ -18,13 +25,8 @@ func NewFSClient() (*FSClient, error) {
 	return &FSClient{
 		BaseDir:  imgPath,
 		Endpoint: "http://localhost:8080/static",
+		Logger:   log.New(os.Stdout, "[local]: ", log.LstdFlags),
 	}, nil
-}
-
-// FSClient file system client
-type FSClient struct {
-	BaseDir  string
-	Endpoint string
 }
 
 // Upload upload file
@@ -33,7 +35,7 @@ func (c *FSClient) Upload(in io.ReadSeeker, p []string) (string, error) {
 	fpth := fmt.Sprintf("%s", path.Join(pt...))
 	url := append([]string{c.Endpoint}, p...)
 	furl := fmt.Sprintf("%s", path.Join(url...))
-	log.Printf("%s", fpth)
+	c.Logger.Printf("%s", fpth)
 
 	f, err := os.Create(fpth)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"path"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 type S3Client struct {
 	Bucket   string
 	BaseKey  string
+	Logger   *log.Logger
 	sess     *session.Session
 	uploader *s3manager.Uploader
 }
@@ -32,6 +34,7 @@ func NewS3Client(bkt string) (*S3Client, error) {
 	return &S3Client{
 		Bucket:   bkt,
 		BaseKey:  "dev/image",
+		Logger:   log.New(os.Stdout, "[s3]: ", log.LstdFlags),
 		sess:     sess,
 		uploader: uploader,
 	}, nil
@@ -55,8 +58,8 @@ func (c *S3Client) Upload(in io.ReadSeeker, p []string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Printf("%s", str)
-	log.Printf("%s", result.Location)
+	c.Logger.Printf("%s", str)
+	c.Logger.Printf("%s", result.Location)
 	return str, nil
 }
 
